@@ -30,8 +30,8 @@ class UsersController extends Controller
             'statusCode' => 404,], 404);
         }
 
-        $user->profile_image = asset('http://localhost:8000/storage/images/profiles/' . $user->profile_image); 
-        $user->qr_image = asset('http://localhost:8000/storage/images/qrcodes/' . $user->qr_image); 
+        $user->profile_image = asset('/storage/images/profiles/' . $user->profile_image); 
+        $user->qr_image = asset('/storage/images/qrcodes/' . $user->qr_image); 
       
         return response()->json($user);
       }
