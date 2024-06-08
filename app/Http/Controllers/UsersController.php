@@ -26,7 +26,8 @@ class UsersController extends Controller
         $user = Users::find($id);
        
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'El horario no existe.',
+            'statusCode' => 404,], 404);
         }
 
         $user->profile_image = asset('http://localhost:8000/storage/images/profiles/' . $user->profile_image); 
@@ -44,7 +45,7 @@ class UsersController extends Controller
           
           // Verificar si se envió un archivo
           if(!$request->hasFile('profile_image')) {
-              return response()->json(['error' => 'No se envió ningún archivo']);
+              return response()->json(['message' => 'No se envió ningún archivo', 'statusCode'=>404], 404);
           }
          
           $validator = Validator::make($request->all(), [
@@ -62,7 +63,11 @@ class UsersController extends Controller
           ]);
       
           if ($validator->fails()) {
-              return response()->json($validator->errors());
+            return response()->json([
+                'message' => 'Errores de validación',
+                'statusCode' => 422,
+                'messageDetail' => $validator->errors()->all()
+            ], 422);
           }                                                                       
           
           // Obtener el archivo de la solicitud
@@ -99,7 +104,7 @@ class UsersController extends Controller
                 ->setOutfile($path)
                 ->png();
       
-          return response()->json($user, 201);
+          return response()->json(['message'=> 'Usuario creado correctamente', 'data'=>$user], 201);
       }
       
 
@@ -113,8 +118,8 @@ class UsersController extends Controller
         $user = Users::where('id', $id)->first();
 
         if (!$user) {
-            $response['msg'] = "El usuario no existe";
-            return response()->json($response);
+            return response()->json(['message' => 'El horario no existe.',
+            'statusCode' => 404,], 404);
         }
 
 
@@ -134,7 +139,11 @@ class UsersController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json([
+                'message' => 'Errores de validación',
+                'statusCode' => 422,
+                'messageDetail' => $validator->errors()->all()
+            ], 422);
         }
 
 
@@ -168,7 +177,7 @@ class UsersController extends Controller
         $user->save();
 
 
-        return response()->json($user);
+        return response()->json(['message'=> 'Usuario Actualizado correctamente', 'data'=>$user], 201);
         
     }
 
@@ -177,13 +186,21 @@ class UsersController extends Controller
 
     public function destroy($id)
     {
-        $user = Users::findOrFail($id);
+        $user = Users::find($id);
 
         if (!$user ) {
-            return response()->json(["msg"=>"El usuario no existe", "status"=>404]);
+            return response()->json(['message' => 'El horario no existe.',
+            'statusCode' => 404,], 404);
         }
 
-        $rowsAffected = Users::destroy($id);;
+        $rowsAffected = Users::destroy($id);
+
+        $response = [
+            "statusCode" => 201,
+            "message" => "Rol eliminado exitosamente",
+            "affected" => $rowsAffected
+        ];
+
       
        
         $profileImageName = $user->profile_image;
@@ -200,6 +217,6 @@ class UsersController extends Controller
             unlink( $qrImagePath);   
         }
 
-        return response()->json(["affected"=>$rowsAffected, "msg"=>"Registro eliminado correctamente", "status"=> 200]);
+        return response()->json($response, 201);
     }
 }

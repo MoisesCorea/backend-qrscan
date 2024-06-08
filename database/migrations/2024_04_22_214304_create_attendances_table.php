@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('user_id', 10);
             $table->unsignedBigInteger('event_id');
-            $table->time('enry_time');
-            $table->time('finish_time');
-            $table->date('attendace_date');
+            $table->time('entry_time')->nullable();
+            $table->time('finish_time')->nullable();
+            $table->date('attendance_date');
 
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('event_id')->references('id')->on('events');

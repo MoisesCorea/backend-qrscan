@@ -33,13 +33,13 @@ class AuthController extends Controller
                     $rol_name = null; // o un valor de error predeterminado
                 }
 
-                return response()->json(['user_id' => $user_id, "access_token" =>$token->plainTextToken, "rol"=> $rol_name], 200);
+                return response()->json(['message' => 'Inicio de sesión exitoso', 'statusCode'=> 200, 'user_id' => $user_id, "access_token" =>$token->plainTextToken, "rol"=> $rol_name], 200);
             } else {
                 
-                return response()->json(['message' => 'Las credenciales de inicio de sesión no son válidas'], 401);
+                return response()->json(['message' => 'Las credenciales de inicio de sesión no son válidas', 'statusCode'=> 401], 401);
             }
         } else {
-            return response()->json(['message' => 'Las credenciales de inicio de sesión no son válidas'], 401);
+            return response()->json(['message' => 'Las credenciales de inicio de sesión no son válidas', 'statusCode'=> 401], 401);
         }
 }
 
@@ -47,7 +47,7 @@ class AuthController extends Controller
 
     auth()->user()->tokens()->delete();
 
-    return  ['Message'=> "Cierre de sesion exitoso"];
+    return  ['message'=> "Cierre de sesion exitoso", 'statusCode' => 200];
  }
 
     public function register (Request $request){
@@ -61,7 +61,11 @@ class AuthController extends Controller
         ]);
     
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json([
+            'message' => 'Errores de validación',
+            'statusCode' => 422,
+            'messageDetail' => $validator->errors()->all()
+        ], 422);
         }
     
     
@@ -75,7 +79,7 @@ class AuthController extends Controller
         ]); 
     
     
-    return response()->json(['data'=>$user]);
+    return response()->json(['message'=> 'Usuario creado correctamente', 'data'=>$user], 200);
     
     }
 
@@ -91,29 +95,49 @@ class AuthController extends Controller
             return response()->json($response);
         }
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             'name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' =>'required|string|max:255',
-            'alias' =>'required|string|max:50',
-            'password' => 'required|string|min:8',
-            'rol_id' => 'required',
-        ]);
+            'email' => 'required|string|max:255|unique:admins,email,' . $id,
+            'alias' => 'required|string|max:50|unique:admins,alias,' . $id,
+        ];
+
+        if ($request->has('password') && $request->filled('password')) {
+            $rules['password'] = 'required|string|min:8';
+        }
+
+        if ($request->has('rol_id')) {
+            $rules['rol_id'] = 'required';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json([
+            'message' => 'Errores de validación',
+            'statusCode' => 422,
+            'messageDetail' => $validator->errors()->all()
+        ], 422);
         }
+        
 
         $user->name = $request->name;
         $user->last_name = $request->last_name;
         $user->email = $request->email;
         $user->alias = $request->alias;
-        $user->password = Hash::make($request->password);
-        $user->rol_id = $request->rol_id;
+        if ($request->has('password') && $request->filled('password') ) {
+            $user->password = Hash::make($request->password);
+        }
+
+        if ($request->has('rol_id')) {
+            $user->rol_id = $request->rol_id;
+        }
+      
+       
 
         $user->save();
 
-        return response()->json($user);
+        return response()->json(['message'=> 'Usuario actualizado correctamente', 'data'=>$user], 200);
     }
 
     public function index()
@@ -126,35 +150,66 @@ class AuthController extends Controller
     }
 
     public function show($id){
-        $response = ["status" => 404, "msg" => ""];
     
         $user = Admins::find($id);
     
         if (!$user) {
-            $response['msg'] = "El usuario no existe";
-            return response()->json($response);
+            return response()->json(['message' => 'El usuario no existe.',
+        'statusCode' => 404,], 404);
         }
         return response()->json($user);
     }
 
     public function destroy($id)
 {
-    $response = ["status" => 404, "msg" => ""];
     $user = Admins::find($id);
 
     if (!$user) {
-        $response['msg'] = "El usuario no existe";
-        return response()->json($response);
+        return response()->json(['message' => 'El usuario no existe.',
+        'statusCode' => 404,], 404);
     }
 
     $rowsAffected = Admins::destroy($id);;
 
     $response = [
-        "status" => 200,
-        "msg" => "Usuario eliminado exitosamente",
+        "statusCode" => 200,
+        "message" => "Usuario eliminado exitosamente",
         "affected" => $rowsAffected
     ];
 
-    return response()->json($response);
+    return response()->json($response, 200);
 }
+
+public function changePassword(Request $request)
+    {
+        // Validar la solicitud
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed', // El campo `new_password_confirmation` debe coincidir
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+            'message' => 'Errores de validación',
+            'statusCode' => 422,
+            'messageDetail' => $validator->errors()->all()
+        ], 422);
+
+    }
+
+        $user = $request->user();
+
+        // Verificar la contraseña actual
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'El password actual es incorrecto', 'statusCode'=> 401], 401);
+        }
+
+        // Actualizar la contraseña
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password actualizado correctamente', 'statusCode'=> 200
+        ]);
+    }
 }

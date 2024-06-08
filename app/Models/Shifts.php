@@ -16,6 +16,7 @@ class Shifts extends Model
         'finish_time',
         'shift_duration',
         'mothly_late_allowance',
+        'days'
     ];
 
     

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->time('finish_time');
             $table->integer('shift_duration');
             $table->integer('mothly_late_allowance');
+            $table->json('days');
             $table->timestamps();
         });
     }

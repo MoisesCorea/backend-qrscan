@@ -17,13 +17,12 @@ class ShiftsController extends Controller
     }
 
     public function show($id){
-        $response = ["status" => 404, "msg" => ""];
     
         $shift =  Shifts::find($id);
     
         if (!$shift) {
-            $response['msg'] = "El rol no existe";
-            return response()->json($response);
+            return response()->json(['message' => 'El horario no existe.',
+            'statusCode' => 404,], 404);
         }
     
         return response()->json($shift);
@@ -32,15 +31,20 @@ class ShiftsController extends Controller
         public function store(Request $request)
         {
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:shifts,name',
                 'entry_time' => 'required|date_format:H:i:s',
                 'finish_time' => 'required|date_format:H:i:s',
                 'shift_duration' => 'required|integer',
-                'mothly_late_allowance' => 'required|integer'
+                'mothly_late_allowance' => 'required|integer',
+                'days'=>'required'
             ]);
     
             if ($validator->fails()) {
-                return response()->json($validator->errors());
+                return response()->json([
+                    'message' => 'Errores de validación',
+                    'statusCode' => 422,
+                    'messageDetail' => $validator->errors()->all()
+                ], 422);
             }
     
             $shift = Shifts::create([
@@ -49,33 +53,37 @@ class ShiftsController extends Controller
                 'finish_time'  => $request->finish_time,
                 'shift_duration'  => $request->shift_duration,
                 'mothly_late_allowance'  => $request->mothly_late_allowance,
+                'days' => json_encode($request->days)
             ]);
     
-            return response()->json($shift, 201);
+            return response()->json(['message'=> 'Horario creado correctamente', 'data'=>$shift, 201], 201);
         }
 
         public function update(Request $request, $id)
     {
 
-        $response = ["status" => 404, "msg" => ""];
-
         $shift = Shifts::find($id);
 
         if (!$shift) {
-            $response['msg'] = "El turno no existe";
-            return response()->json($response);
+            return response()->json(['message' => 'El horario no existe.',
+            'statusCode' => 404,], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:shifts,name,' . $id,
             'entry_time' => 'required|date_format:H:i:s',
             'finish_time' => 'required|date_format:H:i:s',
             'shift_duration' => 'required|integer',
-            'mothly_late_allowance' => 'required|integer'
+            'mothly_late_allowance' => 'required|integer',
+            'days' => 'required'
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json([
+                'message' => 'Errores de validación',
+                'statusCode' => 422,
+                'messageDetail' => $validator->errors()->all()
+            ], 422);
         }
 
         $shift->name = $request->name;
@@ -83,9 +91,10 @@ class ShiftsController extends Controller
         $shift->finish_time  = $request->finish_time;
         $shift->shift_duration  = $request->shift_duration;
         $shift->mothly_late_allowance  = $request->mothly_late_allowance;
+        $shift->days = $request->days;
         $shift->save();
 
-        return response()->json($shift);
+        return response()->json(['message'=> 'Horario actualizado correctamente', 'data'=>$shift, 201], 201);
     }
 
 
@@ -93,13 +102,22 @@ class ShiftsController extends Controller
     {
         $shift  = Shifts::findOrFail($id);
 
-        if (!shift ) {
-            return response()->json(["msg"=>"El turno no existe", "status"=>404]);
+        if (!$shift ) {
+            return response()->json(['message' => 'El horario no existe.',
+            'statusCode' => 404,], 404);
         }
         
-        $rowsAffected = Shifts::destroy($id);;
+        $rowsAffected = Shifts::destroy($id);
 
-        return response()->json(["affected"=>$rowsAffected, "msg"=>"Registro eliminado correctamente", "status"=> 200]);
+        $response = [
+            "statusCode" => 200,
+            "message" => "Rol eliminado exitosamente",
+            "affected" => $rowsAffected
+        ];
+
+
+
+        return response()->json($response, 200);
     }
 
 }

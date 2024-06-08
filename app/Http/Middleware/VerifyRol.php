@@ -45,7 +45,5 @@ class VerifyRol
          // Si el usuario no está autenticado, responder con un error
          return response()->json(['message' => 'Debe iniciar sesión para acceder a esta ruta'], 401);
      }
-   
-
     
 }

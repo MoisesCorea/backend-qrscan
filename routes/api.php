@@ -12,44 +12,54 @@ use App\Http\Controllers\AttendanceController;
 
 
 
-//Auth
+
 
 
 Route::post('/login', [AuthController::class, 'login']);
+
+//Registro de asistencia
 Route::post('/usuarios/{id}/asistencia', [AttendanceController::class, 'attachAttendance']);
+
+//Auth
+Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 
-//Registro de asistencia
-Route::get('/report/usuario', [AttendanceController::class, 'generateReportUser'])->middleware('verify.rol:Admin,Admin-1,Admin-2');
 //Reporte de asistencia
+Route::get('/report/usuario', [AttendanceController::class, 'generateReportUser'])->middleware('verify.rol:Admin,Admin-1,Admin-2');
+Route::get('/report/usuarios', [AttendanceController::class, 'generateReportUsers'])->middleware('verify.rol:Admin,Admin-1,Admin-2');
 Route::get('/asistencia', [AttendanceController::class, 'getDailyAttendace'])->middleware('verify.rol:Admin,Admin-1,Admin-2');
 
 
 
 //CRUD admins
+Route::get('admins/{id}', [AuthController::class, 'show'])->middleware('auth:sanctum');
+Route::patch('/{id}', [AuthController::class, 'update'])->middleware('auth:sanctum');
 Route::prefix('admins')->middleware('verify.rol:Admin')->group(function () {
     Route::get('/', [AuthController::class, 'index']);
-    Route::get('/{id}', [AuthController::class, 'show']);
     Route::post('/', [AuthController::class, 'register']);
-    Route::put('/{id}', [AuthController::class, 'update']);
+    Route::patch('/{id}', [AuthController::class, 'update']);
     Route::delete('/{id}',[AuthController::class, 'destroy'] );
 });
 
 //CRUD roles
-Route::prefix('roles')->middleware('verify.rol:Admin')->group(function () {
-    Route::get('/', [RolesController::class, 'index']); 
+Route::get('roles/', [RolesController::class, 'index'])->middleware('verify.rol:Admin'); 
+Route::get('roles/{id}', [RolesController::class, 'show'])->middleware('verify.rol:Admin'); 
+
+Route::prefix('roles')->middleware('verify.rol:Admi')->group(function () {
+   
     Route::post('/', [RolesController::class, 'store']); 
-    Route::get('/{id}', [RolesController::class, 'show']); 
     Route::put('/{id}', [RolesController::class, 'update']); 
     Route::delete('/{id}', [RolesController::class, 'destroy']); 
 });
 
 //CRUD departmentos
+
+Route::get('departmentos', [DepartmentsController::class, 'index'])->middleware('verify.rol:Admin,Admin-1,Admin-2'); 
+Route::get('departmentos/{id}', [DepartmentsController::class, 'show'])->middleware('verify.rol:Admin,Admin-1,Admin-2');
+
 Route::prefix('departmentos')->middleware('verify.rol:Admin,Admin-1')->group(function () {
-    Route::get('/', [DepartmentsController::class, 'index']); 
     Route::post('/', [DepartmentsController::class, 'store']); 
-    Route::get('/{id}', [DepartmentsController::class, 'show']); 
     Route::put('/{id}', [DepartmentsController::class, 'update']); 
     Route::delete('/{id}', [DepartmentsController::class, 'destroy']); 
 });

@@ -19,16 +19,16 @@ return new class extends Migration
             $table->string('gender');
             $table->string('email');
             $table->string('address');
-            $table->integer('phone_number');
+            $table->decimal('phone_number', 15, 0);
             $table->string('profile_image');
             $table->string('qr_image');
             $table->unsignedBigInteger('shift_id');
-            $table->unsignedBigInteger('deparment_id');
-            $table->boolean('status');
+            $table->unsignedBigInteger('department_id');
+            $table->string('status');
             $table->timestamps();
 
             $table->foreign('shift_id')->references('id')->on('shifts');
-            $table->foreign('deparment_id')->references('id')->on('departments');
+            $table->foreign('department_id')->references('id')->on('departments');
             
         });
     }

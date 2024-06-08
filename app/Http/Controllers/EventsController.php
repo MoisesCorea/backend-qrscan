@@ -15,13 +15,12 @@ class EventsController extends Controller
     }
 
     public function show($id){
-        $response = ["status" => 404, "msg" => ""];
     
         $event =  Events::find($id);
     
         if (!$event) {
-            $response['msg'] = "El evento no existe";
-            return response()->json($response);
+            return response()->json(['message' => 'El evento no existe.',
+            'statusCode' => 404,], 404);
         }
     
         return response()->json($event);
@@ -36,7 +35,11 @@ class EventsController extends Controller
             ]);
     
             if ($validator->fails()) {
-                return response()->json($validator->errors());
+                return response()->json([
+                    'message' => 'Errores de validación',
+                    'statusCode' => 422,
+                    'messageDetail' => $validator->errors()->all()
+                ], 422);
             }
     
             $event = Events::create([
@@ -45,19 +48,18 @@ class EventsController extends Controller
                 'description'  => $request->description,
             ]);
     
-            return response()->json($event, 201);
+            return response()->json(['message'=>'Evento creado correctamente', 'data'=>$event], 201);
         }
 
         public function update(Request $request, $id)
     {
 
-        $response = ["status" => 404, "msg" => ""];
 
         $event = Events::find($id);
 
         if (!$event) {
-            $response['msg'] = "El evento no existe";
-            return response()->json($response);
+            return response()->json(['message' => 'El evento no existe.',
+            'statusCode' => 404,], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -67,7 +69,11 @@ class EventsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json([
+                'message' => 'Errores de validación',
+                'statusCode' => 422,
+                'messageDetail' => $validator->errors()->all()
+            ], 422);
         }
 
         $event->name = $request->name;
@@ -75,16 +81,16 @@ class EventsController extends Controller
         $event->description  = $request->description;
         $event->save();
 
-        return response()->json($event);
+        return response()->json(['message'=>'Evento actualizado correctamente', 'data'=>$event], 201);
     }
 
     public function updateStatus(Request $request, $id)
     {
-        $event = Events::findOrFail($id);
+        $event = Events::find($id);
     
         
         if (!$event) {
-            return response()->json(['msg' => 'El evento no existe', 'status' => 404]);
+            return response()->json(['message' => 'El evento no existe', 'statusCode' => 404], 404);
         }
    
         $validator = Validator::make($request->all(), [
@@ -92,7 +98,11 @@ class EventsController extends Controller
         ]);
     
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422); // Use appropriate HTTP status code for validation errors
+            return response()->json([
+                'message' => 'Errores de validación',
+                'statusCode' => 422,
+                'messageDetail' => $validator->errors()->all()
+            ], 422);
         }
     
         // Update event status
@@ -111,17 +121,17 @@ class EventsController extends Controller
     
         $event->save();
     
-        return response()->json($event);
+        return response()->json(['message'=> 'Estado actualizado', 'data'=>$event], 201 );
     }
     
 
     public function updateDailyAttendance(Request $request, $id)
     {
-        $event = Events::findOrFail($id);
+        $event = Events::find($id);
     
         
         if (!$event) {
-            return response()->json(['msg' => 'El evento no existe', 'status' => 404]);
+            return response()->json(['message' => 'El evento no existe', 'statusCode' => 404], 404);
         }
    
         $validator = Validator::make($request->all(), [
@@ -129,7 +139,11 @@ class EventsController extends Controller
         ]);
     
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422); 
+            return response()->json([
+                'message' => 'Errores de validación',
+                'statusCode' => 422,
+                'messageDetail' => $validator->errors()->all()
+            ], 422);
         }
     
        
@@ -138,21 +152,27 @@ class EventsController extends Controller
     
         $event->save();
     
-        return response()->json($event);
+        return response()->json(['message'=> 'Asistencia diaria actualizada', 'data'=>$event], 201 );
     }
 
     
     public function destroy($id)
     {
-        $event  = Events::findOrFail($id);
+        $event  = Events::find($id);
 
         if (!$event ) {
-            return response()->json(["msg"=>"El evento no existe", "status"=>404]);
+            return response()->json(["message"=>"El evento no existe", "statusCode"=>404], 404);
         }
         
-        $rowsAffected = Events::destroy($id);;
+        $rowsAffected = Events::destroy($id);
 
-        return response()->json(["affected"=>$rowsAffected, "msg"=>"Registro eliminado correctamente", "status"=> 200]);
+        $response = [
+            "statusCode" => 200,
+            "message" => "Evento eliminado exitosamente",
+            "affected" => $rowsAffected
+        ];
+
+        return response()->json($response, 200);
     }
 
 
