@@ -15,8 +15,8 @@ class UsersController extends Controller
     public function index()
     {
         $users = Users::all()->map(function ($user) {
-            $user->profile_image = asset('/storage/images/profiles/' . $user->profile_image); 
-            $user->qr_image = asset('/storage/images/qrcodes/' . $user->qr_image); 
+            $user->profile_image = asset('public/storage/images/profiles/' . $user->profile_image); 
+            $user->qr_image = asset('public/storage/images/qrcodes/' . $user->qr_image); 
             return $user;
         });
         return response()->json($users);
@@ -30,8 +30,8 @@ class UsersController extends Controller
             'statusCode' => 404,], 404);
         }
 
-        $user->profile_image = asset('/storage/images/profiles/' . $user->profile_image); 
-        $user->qr_image = asset('/storage/images/qrcodes/' . $user->qr_image); 
+        $user->profile_image = asset('public/storage/images/profiles/' . $user->profile_image); 
+        $user->qr_image = asset('public/storage/images/qrcodes/' . $user->qr_image); 
       
         return response()->json($user);
       }
