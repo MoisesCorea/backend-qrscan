@@ -59,8 +59,7 @@
         ],
         "post-install-cmd": [
             "chmod -R 775 bootstrap/cache",
-            "chmod -R 775 storage",
-            "chmod -R 775 public"
+            "chmod -R 775 storage"
         ]
     },
     "extra": {
